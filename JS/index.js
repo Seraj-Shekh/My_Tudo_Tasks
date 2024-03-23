@@ -3,7 +3,7 @@ const BACKEND_ROOT_URL = 'http://localhost:3001';
 const list = document.querySelector('ul');
 const input = document.querySelector('input');
 
-input.disabled = true;
+input.disabled = false;
 
 const renderTask = (task) => {
     const li = document.createElement('li');
@@ -54,7 +54,10 @@ input.addEventListener('keypress', async (event) => {
         event.preventDefault();
         const task = input.value.trim();
         if (task !== '') {
-            await saveTask(task);
+            saveTask(task);
+            renderTask(task)
+            input.value = '';
         }
     }
 });
+getTasks();
