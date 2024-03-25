@@ -3,32 +3,28 @@ import { Todos } from './class/Todos.js';
 const BACKEND_ROOT_URL = 'http://localhost:3001';
 const todos = new Todos(BACKEND_ROOT_URL);
 
-const list = document.querySelector('ul');
-const input = document.querySelector('input');
+const list = document.querySelector('.list-group');
+const input = document.querySelector('.form-control');
 
 input.disabled = true;
 
 const renderTask = (task) => {
     const li = document.createElement('li');
-    li.setAttribute('class', 'list-group-item');
+    li.setAttribute('class', 'list-group-item d-flex justify-content-between align-items-center');
     li.setAttribute('data-key', task.getId().toString());
-    li.innerHTML = task.getText();
-    renderLink(li, task.getId());
+    li.innerHTML = `
+        <span>${task.getText()}</span>
+        <button type="button" class="btn btn-sm btn-danger delete-task"><i class="fas fa-trash-alt"></i></button>
+    `;
     list.appendChild(li);
-}
 
-const renderLink = (li, id) => {
-    const a = li.appendChild(document.createElement('a'));
-    a.innerHTML = '<i class="bi bi-trash"></i>';
-    a.setAttribute('style', 'float:right');
-    a.addEventListener('click', async (event) => {
+    // Added event listener for delete task
+    const deleteButton = li.querySelector('.delete-task');
+    deleteButton.addEventListener('click', async (event) => {
         event.preventDefault();
         try {
-            await todos.removeTask(id);
-            const li_to_remove = document.querySelector(`[data-key="${id}"]`);
-            if (li_to_remove) {
-                list.removeChild(li_to_remove);
-            }
+            await todos.removeTask(task.getId());
+            li.remove();
         } catch (error) {
             console.error(error);
         }
@@ -36,32 +32,36 @@ const renderLink = (li, id) => {
 }
 
 const getTasks = () => {
-    todos.getTasks().then((tasks) => {
-        tasks.forEach(task => {
-            renderTask(task);
+    todos.getTasks()
+        .then((tasks) => {
+            tasks.forEach(task => {
+                renderTask(task);
+            });
+            input.disabled = false;
+        })
+        .catch((error) => {
+            console.error(error);
+            alert('Failed to fetch tasks. Please try again.');
         });
-        input.disabled = false;
-    }).catch((error) => {
-        alert(error);
-    });
 }
 
-const saveTask = async (task) => {
+const saveTask = async (taskText) => {
     try {
-        const newTask = await todos.addTask(task);
+        const newTask = await todos.addTask(taskText);
         renderTask(newTask);
         input.value = '';
     } catch (error) {
         console.error(error);
+        alert('Failed to add task. Please try again.');
     }
 }
 
 input.addEventListener('keypress', async (event) => {
     if (event.key === 'Enter') {
         event.preventDefault();
-        const task = input.value.trim();
-        if (task !== '') {
-            await saveTask(task);
+        const taskText = input.value.trim();
+        if (taskText !== '') {
+            await saveTask(taskText);
         }
     }
 });
